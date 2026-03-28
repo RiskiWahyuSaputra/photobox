@@ -26,6 +26,19 @@ body {
     overflow-x: hidden;
     min-height: 100vh;
     line-height: 1.2;
+    touch-action: manipulation; /* Disable double-tap zoom */
+}
+
+/* Prevent auto-zoom on mobile inputs */
+select, button, .frame-option, .layout-option {
+    font-size: 16px !important;
+    touch-action: manipulation;
+}
+
+@media (max-width: 600px) {
+    .frame-option, .layout-option {
+        font-size: 12px !important; /* Visual smaller, but base is 16px */
+    }
 }
 
 h1, h2, h3, .pixel-font {
