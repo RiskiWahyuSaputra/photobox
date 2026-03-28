@@ -660,4 +660,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   initCamera();
+
+  // --- 6. Photo Preview Modal Logic ---
+  const modal = document.getElementById("preview-modal");
+  const modalImg = document.getElementById("img-preview");
+  const span = document.getElementsByClassName("close-modal")[0];
+
+  // Open modal when strip is clicked
+  stripPreview.addEventListener("click", () => {
+    if (capturedPhotos.length === 0) return;
+    
+    // We need to generate the merged image to preview it properly
+    // or just show the last captured photo if preferred.
+    // For now, let's show the full strip/merged result in the modal:
+    saveBtn.click(); // Trigger the merge process
+    
+    // Wait a brief moment for the canvas to be ready, then show it
+    setTimeout(() => {
+        modal.style.display = "block";
+        modalImg.src = mergeCanvas.toDataURL("image/png");
+    }, 100);
+  });
+
+  // Close modal logic
+  span.onclick = () => modal.style.display = "none";
+  window.onclick = (event) => {
+    if (event.target == modal) modal.style.display = "none";
+  };
 });
