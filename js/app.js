@@ -39,34 +39,58 @@ document.addEventListener("DOMContentLoaded", () => {
   // No crossOrigin for same-domain files to prevent GitHub Pages issues
   dovesImg.src = "img/doves.jpg"; 
 
+// --- 1. Camera Initialization ---
+async function initCamera() {
+  console.log("Attempting to initialize camera...");
+  loadingOverlay.style.display = "flex";
+  errorOverlay.style.display = "none";
 
-  // --- 1. Camera Initialization ---
-  async function initCamera() {
-    loadingOverlay.style.display = "flex";
-    errorOverlay.style.display = "none";
+  try {
+    // Clear existing stream if any
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
 
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user",
-        },
-        audio: false,
-      });
-      video.srcObject = stream;
+    const constraints = {
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        facingMode: "user",
+      },
+      audio: false,
+    };
 
-      video.onloadedmetadata = () => {
-        loadingOverlay.style.display = "none";
-        startPreviewLoop();
-      };
-    } catch (err) {
-      console.error("Camera error:", err);
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+
+    video.onloadedmetadata = () => {
+      console.log("Camera stream metadata loaded.");
+      video.play();
       loadingOverlay.style.display = "none";
-      errorOverlay.style.display = "flex";
+      startPreviewLoop();
+    };
+  } catch (err) {
+    console.error("CRITICAL Camera error:", err);
+    loadingOverlay.style.display = "none";
+    errorOverlay.style.display = "flex";
+
+    // Detailed error for mobile debugging
+    if (err.name === 'NotAllowedError') {
+      alert("CAMERA PERMISSION DENIED!\nPlease reset camera permission in your browser settings (click the lock icon in the URL bar).");
     }
   }
+}
 
+// Handle manual retry if needed
+const retryBtn = errorOverlay.querySelector('button');
+if (retryBtn) {
+  retryBtn.addEventListener('click', () => {
+      location.reload();
+  });
+}
+
+// Final Call
+initCamera();
   // --- 2. Real-time Preview Loop ---
   function startPreviewLoop() {
     function loop() {
