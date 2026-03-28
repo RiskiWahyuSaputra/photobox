@@ -517,169 +517,65 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
   // --- 5. Download & Merge ---
-  saveBtn.addEventListener("click", () => {
-    if (capturedPhotos.length === 0) return alert("Capture photos first!");
+  async function generateMergedImage() {
+    if (capturedPhotos.length === 0) return null;
 
     const padding = 40;
-    let w = 800,
-      h = 600;
+    let w = 800, h = 600;
 
-    if (currentLayout === "strip") {
-      w = 450;
-      h = 1600;
-    } else if (currentLayout === "2x1") {
-      w = 800;
-      h = 1100;
-    } else if (currentLayout === "2x2") {
-      w = 1200;
-      h = 1000;
-    }
+    if (currentLayout === "strip") { w = 450; h = 1600; } 
+    else if (currentLayout === "2x1") { w = 800; h = 1100; } 
+    else if (currentLayout === "2x2") { w = 1200; h = 1000; }
 
     mergeCanvas.width = w;
     mergeCanvas.height = h;
 
     // Background
-    mergeCtx.fillStyle =
-      currentFrame === "gameboy"
-        ? "#8b8b8b"
-        : currentFrame === "neon"
-          ? "#0d1b4b"
-          : "#000";
+    mergeCtx.fillStyle = (currentFrame === "gameboy") ? "#8b8b8b" : (currentFrame === "neon") ? "#0d1b4b" : "#000";
     mergeCtx.fillRect(0, 0, w, h);
 
-    let loadedCount = 0;
-    capturedPhotos.forEach((src, i) => {
-      const img = new Image();
-      img.onload = () => {
-        const pos = getLayoutPos(i, w, h, padding, currentLayout);
-        mergeCtx.drawImage(img, pos.x, pos.y, pos.w, pos.h);
-        loadedCount++;
-        if (loadedCount === capturedPhotos.length) finishDownload();
-      };
-      img.src = src;
+    const loadImages = capturedPhotos.map(src => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.src = src;
+      });
     });
-  });
 
-  function getLayoutPos(i, tw, th, p, layout) {
-    let x, y, w, h;
-    const aw = tw - p * 2;
-    const ah = th - p * 2;
+    const images = await Promise.all(loadImages);
+    images.forEach((img, i) => {
+      const pos = getLayoutPos(i, w, h, padding, currentLayout);
+      mergeCtx.drawImage(img, pos.x, pos.y, pos.w, pos.h);
+    });
 
-    if (layout === "1x1") {
-      x = p;
-      y = p;
-      w = aw;
-      h = ah;
-    } else if (layout === "strip") {
-      w = aw;
-      h = (ah - p * 3) / 4;
-      x = p;
-      y = p + i * (h + p);
-    } else if (layout === "2x1") {
-      w = aw;
-      h = (ah - p) / 2;
-      x = p;
-      y = p + i * (h + p);
-    } else if (layout === "2x2") {
-      w = (aw - p) / 2;
-      h = (ah - p) / 2;
-      x = p + (i % 2) * (w + p);
-      y = p + Math.floor(i / 2) * (h + p);
+    return mergeCanvas.toDataURL("image/png");
+  }
+
+  saveBtn.addEventListener("click", async () => {
+    if (capturedPhotos.length === 0) return alert("Capture photos first!");
+    const dataUrl = await generateMergedImage();
+    if (dataUrl) {
+        const link = document.createElement("a");
+        link.download = `POLINELA_BOX_${Date.now()}.png`;
+        link.href = dataUrl;
+        link.click();
     }
-    return { x, y, w, h };
-  }
-
-  function finishDownload() {
-    mergeCanvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.download = `POLINELA_BOX_${Date.now()}.png`;
-      link.href = url;
-      link.click();
-      URL.revokeObjectURL(url);
-    }, "image/png");
-  }
-
-  // --- Utilities ---
-  function runCountdown() {
-    return new Promise((resolve) => {
-      let count = 3;
-      countdownEl.style.display = "block";
-      countdownEl.innerText = count;
-      const timer = setInterval(() => {
-        count--;
-        if (count <= 0) {
-          clearInterval(timer);
-          countdownEl.style.display = "none";
-          resolve();
-        } else {
-          countdownEl.innerText = count;
-        }
-      }, 800);
-    });
-  }
-
-  function showFlash() {
-    flashEl.style.display = "block";
-    flashEl.style.opacity = "1";
-    setTimeout(() => {
-      flashEl.style.opacity = "0";
-      setTimeout(() => (flashEl.style.display = "none"), 200);
-    }, 50);
-  }
-
-  function sleep(ms) {
-    return new Promise((r) => setTimeout(r, ms));
-  }
-
-  retakeBtn.addEventListener("click", () => {
-    capturedPhotos = [];
-    stripPreview.innerHTML = "";
-    stripPreview.style.display = "none";
   });
-
-  // Event listeners for Frame/Layout
-  document.querySelectorAll(".frame-option").forEach((opt) => {
-    opt.addEventListener("click", () => {
-      document
-        .querySelectorAll(".frame-option")
-        .forEach((o) => o.classList.remove("selected"));
-      opt.classList.add("selected");
-      currentFrame = opt.dataset.frame;
-    });
-  });
-
-  document.querySelectorAll(".layout-option").forEach((opt) => {
-    opt.addEventListener("click", () => {
-      document
-        .querySelectorAll(".layout-option")
-        .forEach((o) => o.classList.remove("selected"));
-      opt.classList.add("selected");
-      currentLayout = opt.dataset.layout;
-    });
-  });
-
-  initCamera();
 
   // --- 6. Photo Preview Modal Logic ---
   const modal = document.getElementById("preview-modal");
   const modalImg = document.getElementById("img-preview");
   const span = document.getElementsByClassName("close-modal")[0];
 
-  // Open modal when strip is clicked
-  stripPreview.addEventListener("click", () => {
+  stripPreview.addEventListener("click", async () => {
     if (capturedPhotos.length === 0) return;
     
-    // We need to generate the merged image to preview it properly
-    // or just show the last captured photo if preferred.
-    // For now, let's show the full strip/merged result in the modal:
-    saveBtn.click(); // Trigger the merge process
-    
-    // Wait a brief moment for the canvas to be ready, then show it
-    setTimeout(() => {
+    // Show loading state or similar if needed
+    const dataUrl = await generateMergedImage();
+    if (dataUrl) {
         modal.style.display = "block";
-        modalImg.src = mergeCanvas.toDataURL("image/png");
-    }, 100);
+        modalImg.src = dataUrl;
+    }
   });
 
   // Close modal logic
