@@ -10,6 +10,22 @@
     />
     <link rel="stylesheet" href="css/main.css" />
     <style>
+      /* iOS Anti-Zoom Fixes */
+      html {
+        -webkit-text-size-adjust: 100%;
+        touch-action: manipulation;
+      }
+
+      select, 
+      button, 
+      .frame-option, 
+      .layout-option,
+      .pixel-button {
+        font-size: 16px !important; /* Magic number to prevent iOS auto-zoom */
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
+
       .app-container {
         display: grid;
         grid-template-columns: 1fr 350px;
