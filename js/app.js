@@ -133,24 +133,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     switch (frameId) {
       case "classic":
-        // 1. Draw Doves Background (Cover Mode logic)
+        // 1. Improved Background Drawing (Fit to screen without excessive zoom)
         if (dovesImg.complete && !dovesImgFailed && dovesImg.naturalWidth > 0) {
           const imgRatio = dovesImg.naturalWidth / dovesImg.naturalHeight;
           const canvasRatio = w / h;
-          let sw, sh, sx, sy;
+          
+          ctx.save();
+          // Clear background with a soft gray first
+          ctx.fillStyle = "#f8f8f8";
+          ctx.fillRect(0, 0, w, h);
           
           if (imgRatio > canvasRatio) {
-            sh = dovesImg.naturalHeight;
-            sw = sh * canvasRatio;
-            sx = (dovesImg.naturalWidth - sw) / 2;
-            sy = 0;
+            // Screen is taller (Mobile/Portrait) -> Crop horizontal sides
+            const sw = dovesImg.naturalHeight * canvasRatio;
+            const sx = (dovesImg.naturalWidth - sw) / 2;
+            ctx.drawImage(dovesImg, sx, 0, sw, dovesImg.naturalHeight, 0, 0, w, h);
           } else {
-            sw = dovesImg.naturalWidth;
-            sh = sw / canvasRatio;
-            sx = 0;
-            sy = (dovesImg.naturalHeight - sh) / 2;
+            // Screen is wider (Desktop/Landscape) -> Fit to width
+            const vh = w / imgRatio;
+            const vy = (h - vh) / 2;
+            ctx.drawImage(dovesImg, 0, 0, dovesImg.naturalWidth, dovesImg.naturalHeight, 0, vy, w, vh);
           }
-          ctx.drawImage(dovesImg, sx, sy, sw, sh, 0, 0, w, h);
+          ctx.restore();
         } else {
           ctx.fillStyle = "#f0f0f0";
           ctx.fillRect(0, 0, w, h);
