@@ -607,4 +607,78 @@ initCamera();
   window.onclick = (event) => {
     if (event.target == modal) modal.style.display = "none";
   };
+
+  function getLayoutPos(i, tw, th, p, layout) {
+    let x, y, w, h;
+    const aw = tw - p * 2;
+    const ah = th - p * 2;
+
+    if (layout === "1x1") {
+      x = p; y = p; w = aw; h = ah;
+    } else if (layout === "strip") {
+      w = aw; h = (ah - p * 3) / 4;
+      x = p; y = p + i * (h + p);
+    } else if (layout === "2x1") {
+      w = aw; h = (ah - p) / 2;
+      x = p; y = p + i * (h + p);
+    } else if (layout === "2x2") {
+      w = (aw - p) / 2; h = (ah - p) / 2;
+      x = p + (i % 2) * (w + p);
+      y = p + Math.floor(i / 2) * (h + p);
+    }
+    return { x, y, w, h };
+  }
+
+  function runCountdown() {
+    return new Promise((resolve) => {
+      let count = 3;
+      countdownEl.style.display = "block";
+      countdownEl.innerText = count;
+      const timer = setInterval(() => {
+        count--;
+        if (count <= 0) {
+          clearInterval(timer);
+          countdownEl.style.display = "none";
+          resolve();
+        } else {
+          countdownEl.innerText = count;
+        }
+      }, 800);
+    });
+  }
+
+  function showFlash() {
+    flashEl.style.display = "block";
+    flashEl.style.opacity = "1";
+    setTimeout(() => {
+      flashEl.style.opacity = "0";
+      setTimeout(() => (flashEl.style.display = "none"), 200);
+    }, 50);
+  }
+
+  function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  retakeBtn.addEventListener("click", () => {
+    capturedPhotos = [];
+    stripPreview.innerHTML = "";
+    stripPreview.style.display = "none";
+  });
+
+  document.querySelectorAll(".frame-option").forEach((opt) => {
+    opt.addEventListener("click", () => {
+      document.querySelectorAll(".frame-option").forEach((o) => o.classList.remove("selected"));
+      opt.classList.add("selected");
+      currentFrame = opt.dataset.frame;
+    });
+  });
+
+  document.querySelectorAll(".layout-option").forEach((opt) => {
+    opt.addEventListener("click", () => {
+      document.querySelectorAll(".layout-option").forEach((o) => o.classList.remove("selected"));
+      opt.classList.add("selected");
+      currentLayout = opt.dataset.layout;
+    });
+  });
 });
