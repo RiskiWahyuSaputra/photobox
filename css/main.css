@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+
+:root {
+    --bg-color: #0a0a0f;
+    --panel-color: #0d1b4b;
+    --accent-dark: #1a237e;
+    --accent-mid: #0a3d8f;
+    --accent-light: #00bfff;
+    --accent-glow: #4fc3f7;
+    --text-color: #e0e0e0;
+    --pixel-unit: 4px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2 2v20h20v-4h-4v-4h-4v-4h-4V2H2z' fill='%23fff' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E"), auto;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'VT323', monospace;
+    overflow-x: hidden;
+    min-height: 100vh;
+    line-height: 1.2;
+}
+
+h1, h2, h3, .pixel-font {
+    font-family: 'Press Start 2P', cursive;
+    text-transform: uppercase;
+}
+
+/* Pixel Border Box */
+.pixel-box {
+    background: var(--panel-color);
+    border: none;
+    position: relative;
+    padding: 16px;
+    box-shadow: 
+        calc(-1 * var(--pixel-unit)) 0 0 0 var(--accent-dark),
+        var(--pixel-unit) 0 0 0 var(--accent-dark),
+        0 calc(-1 * var(--pixel-unit)) 0 0 var(--accent-dark),
+        0 var(--pixel-unit) 0 0 var(--accent-dark);
+    margin: var(--pixel-unit);
+}
+
+.pixel-button {
+    background: var(--accent-mid);
+    color: white;
+    padding: 12px 24px;
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-block;
+    border: none;
+    box-shadow: 
+        calc(-1 * var(--pixel-unit)) 0 0 0 #000,
+        var(--pixel-unit) 0 0 0 #000,
+        0 calc(-1 * var(--pixel-unit)) 0 0 #000,
+        0 var(--pixel-unit) 0 0 #000;
+    transition: transform 0.1s steps(2);
+    cursor: pointer;
+}
+
+.pixel-button:hover:not(:disabled) {
+    background: var(--accent-light);
+    box-shadow: 
+        calc(-1 * var(--pixel-unit)) 0 0 0 var(--accent-glow),
+        var(--pixel-unit) 0 0 0 var(--accent-glow),
+        0 calc(-1 * var(--pixel-unit)) 0 0 var(--accent-glow),
+        0 var(--pixel-unit) 0 0 var(--accent-glow);
+}
+
+.pixel-button:active:not(:disabled) {
+    transform: translate(calc(var(--pixel-unit)), calc(var(--pixel-unit)));
+}
+
+.pixel-button:disabled {
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* Background Effects */
+.scanlines {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 4px;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.pixel-grid {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+        linear-gradient(to right, rgba(26, 35, 126, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(26, 35, 126, 0.1) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.stars {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+}
+
+.star {
+    position: absolute;
+    background: white;
+    width: 2px;
+    height: 2px;
+    animation: blink var(--duration) infinite steps(2);
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+}
+
+/* Loading & Error States */
+.status-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    text-align: center;
+    padding: 20px;
+}
+
+.pixel-loader {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-light);
+    margin-bottom: 20px;
+    animation: spin 1s infinite steps(4);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
