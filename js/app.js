@@ -133,57 +133,71 @@ document.addEventListener("DOMContentLoaded", () => {
 
     switch (frameId) {
       case "classic":
-        // 1. Draw Doves Background (Full Screen)
+        // 1. Draw Doves Background (Cover Mode logic)
         if (dovesImg.complete && !dovesImgFailed && dovesImg.naturalWidth > 0) {
-          ctx.drawImage(dovesImg, 0, 0, w, h);
+          const imgRatio = dovesImg.naturalWidth / dovesImg.naturalHeight;
+          const canvasRatio = w / h;
+          let sw, sh, sx, sy;
+          
+          if (imgRatio > canvasRatio) {
+            sh = dovesImg.naturalHeight;
+            sw = sh * canvasRatio;
+            sx = (dovesImg.naturalWidth - sw) / 2;
+            sy = 0;
+          } else {
+            sw = dovesImg.naturalWidth;
+            sh = sw / canvasRatio;
+            sx = 0;
+            sy = (dovesImg.naturalHeight - sh) / 2;
+          }
+          ctx.drawImage(dovesImg, sx, sy, sw, sh, 0, 0, w, h);
         } else {
-          ctx.fillStyle = "#f0f0f0"; // Fallback color if image fails
+          ctx.fillStyle = "#f0f0f0";
           ctx.fillRect(0, 0, w, h);
         }
 
-        // 2. Calculate Small Camera Box (Even Smaller: 25% of canvas)
-        const boxW = w * 0.27;
+        // 2. Responsive Camera Box (Dynamic scaling for mobile)
+        const isMobile = w < 500;
+        const boxScale = isMobile ? 0.45 : 0.27; // Larger relative box on mobile
+        const boxW = w * boxScale;
         const boxH = boxW * (video.videoHeight / video.videoWidth || 0.75);
-        const boxX = (w - boxW) / 2 + w * 0.13; // Shifted further right by 15% of width
+        
+        // Dynamic horizontal shift
+        const xOffset = isMobile ? (w * 0.1) : (w * 0.13);
+        const boxX = (w - boxW) / 2 + xOffset;
         const boxY = (h - boxH) / 2;
 
-        // 3. Draw Camera Feed in Small Box (Mirrored)
+        // 3. Draw Camera Feed
         ctx.save();
         ctx.translate(boxX + boxW, boxY);
         ctx.scale(-1, 1);
-        ctx.filter =
-          filterSelect.value === "none" ? "none" : filterSelect.value;
+        ctx.filter = filterSelect.value === "none" ? "none" : filterSelect.value;
         ctx.drawImage(video, 0, 0, boxW, boxH);
         ctx.restore();
 
-        // 4. Draw Pixel Border around the box
-        const borderSize = 6;
+        // 4. Borders
+        const borderSize = isMobile ? 4 : 6;
         ctx.lineWidth = borderSize;
         ctx.strokeStyle = "#000";
-        ctx.strokeRect(
-          boxX - borderSize / 2,
-          boxY - borderSize / 2,
-          boxW + borderSize,
-          boxH + borderSize,
-        );
-
+        ctx.strokeRect(boxX - borderSize / 2, boxY - borderSize / 2, boxW + borderSize, boxH + borderSize);
+        
         ctx.lineWidth = 2;
         ctx.strokeStyle = "#fff";
         ctx.strokeRect(boxX + 1, boxY + 1, boxW - 2, boxH - 2);
 
-        // 5. Add Handwriting Style Text (Enlarged Italic VT323)
+        // 5. Responsive Handwriting Text
         ctx.fillStyle = "#333";
-        ctx.font = 'italic 32px "VT323", monospace';
-
-        // Top Left Text
+        const titleSize = isMobile ? Math.floor(w * 0.055) : 32;
+        const lyricSize = isMobile ? Math.floor(w * 0.04) : 35;
+        
+        ctx.font = `italic ${titleSize}px "VT323", monospace`;
         ctx.textAlign = "left";
-        ctx.fillText("Cerita kita tak jauh berbeda", 20, 50);
+        ctx.fillText("Cerita kita tak jauh berbeda", 20, isMobile ? 40 : 50);
 
-        // Bottom Right Text
         ctx.textAlign = "right";
-        ctx.font = 'italic 35px "VT323", monospace';
-        ctx.fillText("Got beat down by the world", w - 20, h - 65);
-        ctx.fillText("sometimes i wanna fold", w - 20, h - 30);
+        ctx.font = `italic ${lyricSize}px "VT323", monospace`;
+        ctx.fillText("Got beat down by the world", w - 20, h - (isMobile ? 55 : 65));
+        ctx.fillText("sometimes i wanna fold", w - 20, h - (isMobile ? 25 : 30));
         break;
 
       case "neon":
