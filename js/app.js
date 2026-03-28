@@ -26,20 +26,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const dovesImg = new Image();
   let dovesImgFailed = false;
 
-  // Use crossOrigin only if NOT on local file protocol to avoid CORS errors
-  if (window.location.protocol !== "file:") {
-    dovesImg.crossOrigin = "anonymous";
-  }
-
   dovesImg.onload = () => {
     console.log("Doves image loaded successfully.");
+    dovesImgFailed = false;
   };
 
   dovesImg.onerror = () => {
     console.warn("Doves image failed to load. Using fallback background.");
     dovesImgFailed = true;
   };
-  dovesImg.src = "img/doves.jpg";
+  
+  // No crossOrigin for same-domain files to prevent GitHub Pages issues
+  dovesImg.src = "img/doves.jpg"; 
+
 
   // --- 1. Camera Initialization ---
   async function initCamera() {
